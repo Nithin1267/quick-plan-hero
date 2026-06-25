@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart To-Do List</title>
+  <meta name="description" content="A polished, professional Smart To-Do List with priorities, due dates, search and filters." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --bg-2: #0f1424;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-strong: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e7ecf3;
+      --muted: #8a95a8;
+      --primary: #7c5cff;
+      --primary-2: #4ea1ff;
+      --danger: #ff5d73;
+      --warn: #ffb347;
+      --ok: #34d399;
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,0.25), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(78,161,255,0.18), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg-2));
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 760px; margin: 0 auto; padding: 48px 20px 80px; }
+    header { text-align: center; margin-bottom: 28px; }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(28px, 4vw, 40px);
+      margin: 0 0 8px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      letter-spacing: -0.02em;
+    }
+    header p { color: var(--muted); margin: 0; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    form.add {
+      display: grid;
+      grid-template-columns: 1fr 140px 160px auto;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    input, select, button {
+      font: inherit; color: var(--text);
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .15s, background .15s, transform .05s;
+    }
+    input::placeholder { color: var(--muted); }
+    input:focus, select:focus { border-color: var(--primary); }
+    button.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border: none; cursor: pointer; font-weight: 600;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button.primary:active { transform: translateY(1px); }
+    .toolbar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .search { flex: 1; min-width: 220px; }
+    .filters { display: flex; gap: 6px; }
+    .chip {
+      padding: 8px 12px; border-radius: 999px; cursor: pointer;
+      background: var(--surface-strong); border: 1px solid var(--border);
+      color: var(--muted); font-size: 14px;
+    }
+    .chip.active { color: var(--text); border-color: var(--primary); background: rgba(124,92,255,0.15); }
+    ul.list { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 8px; }
+    li.item {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 12px; align-items: center;
+      padding: 12px 14px;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    li.item.done .title { color: var(--muted); text-decoration: line-through; }
+    .check {
+      width: 22px; height: 22px; border-radius: 7px; cursor: pointer;
+      border: 1.5px solid var(--border); background: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .check.checked { background: linear-gradient(135deg, var(--primary), var(--primary-2)); border-color: transparent; }
+    .check.checked::after { content: "✓"; font-size: 14px; color: white; }
+    .title { font-weight: 500; }
+    .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+    .pill {
+      font-size: 11px; padding: 4px 8px; border-radius: 999px;
+      border: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .pill.low { color: var(--ok); border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); }
+    .pill.medium { color: var(--warn); border-color: rgba(255,179,71,0.4); background: rgba(255,179,71,0.08); }
+    .pill.high { color: var(--danger); border-color: rgba(255,93,115,0.4); background: rgba(255,93,115,0.08); }
+    .due.overdue { color: var(--danger); }
+    .del {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      width: 34px; height: 34px; padding: 0; border-radius: 10px; cursor: pointer;
+    }
+    .del:hover { color: var(--danger); border-color: rgba(255,93,115,0.4); }
+    .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+    footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 18px; }
+    @media (max-width: 640px) {
+      form.add { grid-template-columns: 1fr 1fr; }
+      form.add input.title-input { grid-column: 1 / -1; }
+      li.item { grid-template-columns: auto 1fr auto; }
+      li.item .pill, li.item .due { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Smart To-Do List</h1>
+      <p>Plan your day with priorities, due dates, and instant search.</p>
+    </header>
+
+    <section class="card">
+      <form class="add" id="addForm">
+        <input class="title-input" id="title" type="text" placeholder="What needs to get done?" required />
+        <select id="priority" aria-label="Priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <input id="due" type="date" aria-label="Due date" />
+        <button class="primary" type="submit">Add task</button>
+      </form>
+
+      <div class="toolbar">
+        <input class="search" id="search" type="search" placeholder="Search tasks…" />
+        <div class="filters" role="tablist">
+          <button class="chip active" data-filter="all" type="button">All</button>
+          <button class="chip" data-filter="active" type="button">Active</button>
+          <button class="chip" data-filter="completed" type="button">Completed</button>
+        </div>
+      </div>
+
+      <ul class="list" id="list"></ul>
+      <div id="empty" class="empty" hidden>No tasks yet. Add your first one above ✨</div>
+    </section>
+
+    <footer>Stored locally in your browser • MIT License</footer>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'smart-todo-list:v1';
+    /** @type {{id:string,title:string,priority:'low'|'medium'|'high',due:string|null,done:boolean,createdAt:number}[]} */
+    let tasks = load();
+    let filter = 'all';
+    let query = '';
+
+    const $ = (s) => document.querySelector(s);
+    const listEl = $('#list');
+    const emptyEl = $('#empty');
+
+    function load() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+    function uid() { return Math.random().toString(36).slice(2, 10); }
+
+    function render() {
+      const q = query.trim().toLowerCase();
+      const filtered = tasks
+        .filter(t => filter === 'all' ? true : filter === 'active' ? !t.done : t.done)
+        .filter(t => !q || t.title.toLowerCase().includes(q))
+        .sort((a, b) => Number(a.done) - Number(b.done) || b.createdAt - a.createdAt);
+
+      listEl.innerHTML = '';
+      emptyEl.hidden = filtered.length !== 0;
+
+      const today = new Date(); today.setHours(0,0,0,0);
+
+      for (const t of filtered) {
+        const li = document.createElement('li');
+        li.className = 'item' + (t.done ? ' done' : '');
+        const overdue = t.due && !t.done && new Date(t.due) < today;
+
+        li.innerHTML = `
+          <button class="check ${t.done ? 'checked' : ''}" aria-label="Toggle complete"></button>
+          <div>
+            <div class="title"></div>
+            <div class="meta">
+              ${t.due ? `<span class="due ${overdue ? 'overdue' : ''}">📅 ${formatDate(t.due)}${overdue ? ' • overdue' : ''}</span>` : ''}
+            </div>
+          </div>
+          <span class="pill ${t.priority}">${t.priority}</span>
+          <button class="del" aria-label="Delete task">✕</button>
+        `;
+        li.querySelector('.title').textContent = t.title;
+        li.querySelector('.check').addEventListener('click', () => toggle(t.id));
+        li.querySelector('.del').addEventListener('click', () => remove(t.id));
+        listEl.appendChild(li);
+      }
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' });
+    }
+
+    function add(title, priority, due) {
+      tasks.push({ id: uid(), title: title.trim(), priority, due: due || null, done: false, createdAt: Date.now() });
+      save(); render();
+    }
+    function toggle(id) {
+      const t = tasks.find(x => x.id === id); if (!t) return;
+      t.done = !t.done; save(); render();
+    }
+    function remove(id) {
+      tasks = tasks.filter(x => x.id !== id); save(); render();
+    }
+
+    $('#addForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = $('#title').value;
+      if (!title.trim()) return;
+      add(title, $('#priority').value, $('#due').value);
+      e.target.reset();
+      $('#priority').value = 'medium';
+      $('#title').focus();
+    });
+    $('#search').addEventListener('input', (e) => { query = e.target.value; render(); });
+    document.querySelectorAll('.chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filter = btn.dataset.filter; render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>
